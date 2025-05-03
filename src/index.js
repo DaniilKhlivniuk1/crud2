@@ -1,10 +1,16 @@
-const api = 'http://localhost:1234/';
+const api = 'https://680dfedbc47cb8074d91bfe7.mockapi.io/ap/post/users';
 
-function getStudents() {
-  fetch(api)
-    .then(res => res.json())
-    .then(data => renderStudents(data))
-    .catch(err => console.error(err));
+document.getElementById('get-students-btn').addEventListener('click', getStudents);
+document.getElementById('add-student-form').addEventListener('submit', addStudent);
+
+async function getStudents() {
+  try {
+    const res = await fetch(api);
+    const data = await res.json();
+    renderStudents(data);
+  } catch (err) {
+    console.error('GET error:', err);
+  }
 }
 
 function renderStudents(students) {
@@ -17,7 +23,7 @@ function renderStudents(students) {
       <td>${student.name}</td>
       <td>${student.age}</td>
       <td>${student.course}</td>
-      <td>${student.skills.join(', ')}</td>
+      <td>${student.skills?.join(', ')}</td>
       <td>${student.email}</td>
       <td>${student.isEnrolled ? 'Так' : 'Ні'}</td>
       <td>
@@ -29,9 +35,7 @@ function renderStudents(students) {
   });
 }
 
-document.getElementById('get-students-btn').addEventListener('click', getStudents);
-
-document.getElementById('add-student-form').addEventListener('submit', function (e) {
+async function addStudent(e) {
   e.preventDefault();
   const student = {
     name: document.getElementById('name').value,
@@ -42,30 +46,44 @@ document.getElementById('add-student-form').addEventListener('submit', function 
     isEnrolled: document.getElementById('isEnrolled').checked
   };
 
-  fetch(api, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(student)
-  })
-    .then(() => getStudents())
-    .catch(err => console.error(err));
-});
-
-function updateStudent(id) {
-  const updatedName = prompt('Нове ім\'я:');
-  if (!updatedName) return;
-  fetch(`${api}/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: updatedName })
-  })
-    .then(() => getStudents())
-    .catch(err => console.error(err));
+  try {
+    await fetch(api, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(student)
+    });
+    getStudents();
+    e.target.reset();
+  } catch (err) {
+    console.error('POST error:', err);
+  }
 }
 
-function deleteStudent(id) {
+async function updateStudent(id) {
+  const updatedName = prompt('Нове ім\'я:');
+  if (!updatedName) return;
+
+  try {
+    await fetch(`${api}/${id}`, {
+      method: 'PUT', // или PATCH, если хочешь частично
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: updatedName })
+    });
+    getStudents();
+  } catch (err) {
+    console.error('UPDATE error:', err);
+  }
+}
+
+async function deleteStudent(id) {
   if (!confirm('Ви впевнені, що хочете видалити цього студента?')) return;
-  fetch(`${api}/${id}`, { method: 'DELETE' })
-    .then(() => getStudents())
-    .catch(err => console.error(err));
+
+  try {
+    await fetch(`${api}/${id}`, {
+      method: 'DELETE'
+    });
+    getStudents();
+  } catch (err) {
+    console.error('DELETE error:', err);
+  }
 }
