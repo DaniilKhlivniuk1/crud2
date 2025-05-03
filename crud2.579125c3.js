@@ -1,6 +1,14 @@
-const api = 'http://localhost:1234/';
-function getStudents() {
-    fetch(api).then((res)=>res.json()).then((data)=>renderStudents(data)).catch((err)=>console.error(err));
+const api = 'https://680dfedbc47cb8074d91bfe7.mockapi.io/ap/post/users';
+document.getElementById('get-students-btn').addEventListener('click', getStudents);
+document.getElementById('add-student-form').addEventListener('submit', addStudent);
+async function getStudents() {
+    try {
+        const res = await fetch(api);
+        const data = await res.json();
+        renderStudents(data);
+    } catch (err) {
+        console.error('GET error:', err);
+    }
 }
 function renderStudents(students) {
     const tbody = document.querySelector('#students-table tbody');
@@ -12,7 +20,7 @@ function renderStudents(students) {
       <td>${student.name}</td>
       <td>${student.age}</td>
       <td>${student.course}</td>
-      <td>${student.skills.join(', ')}</td>
+      <td>${student.skills?.join(', ')}</td>
       <td>${student.email}</td>
       <td>${student.isEnrolled ? "\u0422\u0430\u043A" : "\u041D\u0456"}</td>
       <td>
@@ -23,8 +31,7 @@ function renderStudents(students) {
         tbody.appendChild(row);
     });
 }
-document.getElementById('get-students-btn').addEventListener('click', getStudents);
-document.getElementById('add-student-form').addEventListener('submit', function(e) {
+async function addStudent(e) {
     e.preventDefault();
     const student = {
         name: document.getElementById('name').value,
@@ -34,32 +41,48 @@ document.getElementById('add-student-form').addEventListener('submit', function(
         email: document.getElementById('email').value,
         isEnrolled: document.getElementById('isEnrolled').checked
     };
-    fetch(api, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(student)
-    }).then(()=>getStudents()).catch((err)=>console.error(err));
-});
-function updateStudent(id) {
+    try {
+        await fetch(api, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(student)
+        });
+        getStudents();
+        e.target.reset();
+    } catch (err) {
+        console.error('POST error:', err);
+    }
+}
+async function updateStudent(id) {
     const updatedName = prompt("\u041D\u043E\u0432\u0435 \u0456\u043C'\u044F:");
     if (!updatedName) return;
-    fetch(`${api}/${id}`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            name: updatedName
-        })
-    }).then(()=>getStudents()).catch((err)=>console.error(err));
+    try {
+        await fetch(`${api}/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: updatedName
+            })
+        });
+        getStudents();
+    } catch (err) {
+        console.error('UPDATE error:', err);
+    }
 }
-function deleteStudent(id) {
+async function deleteStudent(id) {
     if (!confirm("\u0412\u0438 \u0432\u043F\u0435\u0432\u043D\u0435\u043D\u0456, \u0449\u043E \u0445\u043E\u0447\u0435\u0442\u0435 \u0432\u0438\u0434\u0430\u043B\u0438\u0442\u0438 \u0446\u044C\u043E\u0433\u043E \u0441\u0442\u0443\u0434\u0435\u043D\u0442\u0430?")) return;
-    fetch(`${api}/${id}`, {
-        method: 'DELETE'
-    }).then(()=>getStudents()).catch((err)=>console.error(err));
+    try {
+        await fetch(`${api}/${id}`, {
+            method: 'DELETE'
+        });
+        getStudents();
+    } catch (err) {
+        console.error('DELETE error:', err);
+    }
 }
 
 //# sourceMappingURL=crud2.579125c3.js.map
